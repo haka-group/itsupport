@@ -165,6 +165,33 @@
     gap: 5px;
     transition: 0.3s;
 }
+        /* ابحثي عن هذه الأجزاء وعدليها بهذا الشكل */
+.sidebar {
+    width: 260px;
+    /* يفضل إخفاء القائمة الجانبية في الجوال أو تحويلها لقائمة علوية */
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column; /* جعل القائمة فوق المحتوى في الجوال */
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+    }
+    .main-content {
+        padding: 15px; /* تقليل المسافات في الجوال */
+    }
+    .card {
+        padding: 20px;
+        width: 100%; /* جعل الكرت يأخذ عرض الشاشة بالكامل */
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* جعل الرسوم البيانية فوق بعضها في الجوال */
+    }
+}
     </style>
 </head>
 <body>
