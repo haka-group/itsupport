@@ -165,15 +165,14 @@
     gap: 5px;
     transition: 0.3s;
 }
-        /* ابحثي عن هذه الأجزاء وعدليها بهذا الشكل */
+       
 .sidebar {
     width: 260px;
-    /* يفضل إخفاء القائمة الجانبية في الجوال أو تحويلها لقائمة علوية */
 }
 
 @media (max-width: 768px) {
     body {
-        flex-direction: column; /* جعل القائمة فوق المحتوى في الجوال */
+        flex-direction: column; 
     }
     .sidebar {
         width: 100%;
@@ -182,14 +181,14 @@
         border-bottom: 1px solid #ddd;
     }
     .main-content {
-        padding: 15px; /* تقليل المسافات في الجوال */
+        padding: 15px; 
     }
     .card {
         padding: 20px;
-        width: 100%; /* جعل الكرت يأخذ عرض الشاشة بالكامل */
+        width: 100%; 
     }
     .dashboard-grid {
-        grid-template-columns: 1fr; /* جعل الرسوم البيانية فوق بعضها في الجوال */
+        grid-template-columns: 1fr; 
     }
 }
     </style>
@@ -329,9 +328,9 @@
 
     <script>
         function copyFormLink() {
-    const url = window.location.href; // يأخذ رابط الصفحة الحالي
+    const url = window.location.href;   
     navigator.clipboard.writeText(url).then(() => {
-        alert("Form link copied to clipboard!"); // تنبيه للمستخدم بنجاح النسخ
+        alert("Form link copied to clipboard!"); 
     }).catch(err => {
         console.error('Error: ', err);
     });
