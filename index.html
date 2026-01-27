@@ -272,7 +272,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Issue Description / Details</label>
+                    <label>Description</label>
                     <textarea id="desc" rows="4" placeholder="Please describe the issue in detail..."></textarea>
                 </div>
 
@@ -496,9 +496,23 @@
             });
             doc.save("it_report.pdf");
         }
-        const AIRTABLE_TOKEN = "patO9otXDZShZLUSu.2ac0bb3b923b4603ef15ed920fcc13d48e8881107cc919a8a19d80d102f476c6"; 
-const BASE_ID = "applQXkOT3HgW9YHm"; 
-const TABLE_NAME = "Table 1";
+        const ticketData = {
+        "Employee Name": document.getElementById('empName').value,
+        "Company": document.getElementById('companyName').value,
+        "Description": document.getElementById('desc').value,
+        "Status": "Done",
+        "Attachment": attachmentValue // سيخزن اسم الملف المرفق
+    };
+
+    try {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fields: ticketData })
+        });
     </script>
 </body>
 </html>
