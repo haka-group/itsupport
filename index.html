@@ -221,6 +221,7 @@
                     <label>Company</label>
                     <select id="companyName" required>
                         <option value=""> Please Select </option>
+                        <option value="Haka resources">Haka group</option>
                         <option value="Rikaz">Rikaz</option>
                         <option value="zaya">zaya</option>
                         <option value="Fadeco">Fadeco</option>
@@ -511,8 +512,9 @@ document.getElementById('ticketForm').onsubmit = async function(e) {
     // Prepare data (Keys must match Airtable Column Names exactly)
     const ticketData = {
         "fields": {
+                        "Company": document.getElementById('companyName').value,
+
             "Employee Name": document.getElementById('empName').value,
-            "Company": document.getElementById('companyName').value,
             "Description": document.getElementById('desc').value,
             "Status": "Done",
             "Attachment": fileName
