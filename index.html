@@ -545,6 +545,48 @@ document.getElementById('ticketForm').onsubmit = async function(e) {
         alert('Error: Could not connect to the database.');
     }
 };
+        const AIRTABLE_TOKEN = "patO9otXDZShZLUSu.2ac0bb3b923b4603ef15ed920fcc13d48e8881107cc919a8a19d80d102f476c6";
+const BASE_ID = "applQXkOT3HgW9YHm";
+const TABLE_ID = "tbla9czkS57NYfpZp"; // Table ID based on your provided info
+
+document.getElementById('ticketForm').onsubmit = async function(e) {
+    e.preventDefault();
+    
+    // Collecting data from the form IDs in your HTML
+    const ticketData = {
+        "fields": {
+            "Employee Name": document.getElementById('empName').value,
+            "Company": document.getElementById('companyName').value,
+            "Department": document.getElementById('deptName').value,
+            "Description": document.getElementById('desc').value,
+            "Status": document.getElementById('statusSelect').value || "Done",
+            "Attachment": document.getElementById('fileInput').files[0] ? document.getElementById('fileInput').files[0].name : "No file"
+        }
+    };
+
+    try {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(ticketData)
+        });
+
+        if (response.ok) {
+            alert('Success! Data saved to Airtable. 🎉');
+            this.reset();
+        } else {
+            const errorLog = await response.json();
+            console.error(errorLog);
+            alert('Submission failed: Verify that Airtable column names match the code exactly.');
+        }
+    } catch (error) {
+        console.error('Connection Error:', error);
+        alert('Network error, please try again.');
+    }
+};
     </script>
 </body>
 </html>
