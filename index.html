@@ -328,23 +328,21 @@
     </div>
 
     <script>
-        function copyFormLink() {
-    const url = window.location.href;   
-    navigator.clipboard.writeText(url).then(() => {
-        alert("Form link copied to clipboard!"); 
-    }).catch(err => {
-        console.error('Error: ', err);
-    });
-}
         let tickets = [];
-        let currentFiles = [];
-        let companyChartInstance = null;
-        let deptChartInstance = null;
+let currentFiles = [];
+let companyChartInstance = null;
+let deptChartInstance = null;
 
-        function showPage(pageId) {
+// Configuration
+const AIRTABLE_TOKEN = "patO9otXDZShZLUSu.2ac0bb3b923b4603ef15ed920fcc13d48e8881107cc919a8a19d80d102f476c6";
+const BASE_ID = "applQXkOT3HgW9YHm";
+const TABLE_ID = "tbla9czkS57NYfpZp";
+
+// 1. Navigation Function
+function showPage(pageId) {
     if (pageId === 'admin-page') {
         const password = prompt("Please enter Admin Password:");
-        if (password !== "123456654321") { // password
+        if (password !== "123456654321") {
             alert("Incorrect password!");
             return;
         }
@@ -352,216 +350,46 @@
 
     document.getElementById('form-page').style.display = pageId === 'form-page' ? 'block' : 'none';
     document.getElementById('admin-page').style.display = pageId === 'admin-page' ? 'block' : 'none';
-    
+
     document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
-    if(window.event) window.event.currentTarget.classList.add('active');
-    
-    if(pageId === 'admin-page') {
+    event.currentTarget.classList.add('active');
+
+    if (pageId === 'admin-page') {
         renderTable();
         updateDashboard();
     }
 }
 
-        function updateDashboard() {
-            const compData = {};
-            const deptData = {};
-
-            tickets.forEach(t => {
-                compData[t.company] = (compData[t.company] || 0) + 1;
-                deptData[t.dept] = (deptData[t.dept] || 0) + 1;
-            });
-
-      
-            const ctxComp = document.getElementById('companyChart').getContext('2d');
-            if(companyChartInstance) companyChartInstance.destroy();
-            companyChartInstance = new Chart(ctxComp, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(compData),
-                    datasets: [{
-                        label: 'Tickets',
-                        data: Object.values(compData),
-                        backgroundColor: ['#166e48', '#2d8a5a', '#4fac7d', '#8ed1af'],
-                        borderRadius: 5
-                    }]
-                },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-           
-            const ctxDept = document.getElementById('deptChart').getContext('2d');
-            if(deptChartInstance) deptChartInstance.destroy();
-            deptChartInstance = new Chart(ctxDept, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(deptData),
-                    datasets: [{
-                        data: Object.values(deptData),
-                        backgroundColor: ['#166e48', '#2d8a5a', '#4fac7d', '#8ed1af']
-                    }]
-                },
-                options: { maintainAspectRatio: false }
-            });
-        }
-
-        function previewFiles() {
-            const preview = document.getElementById('preview-container');
-            preview.innerHTML = '';
-            currentFiles = [];
-            Array.from(document.getElementById('fileAttachment').files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    currentFiles.push(e.target.result);
-                    const img = document.createElement('img');
-                    img.src = e.target.result; img.className = 'preview-img';
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        document.getElementById('ticketForm').onsubmit = function(e) {
-            e.preventDefault();
-            const now = new Date();
-            const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const newTicket = {
-                id: Date.now(),
-                company: document.getElementById('companyName').value,
-                name: document.getElementById('empName').value,
-                dept: document.getElementById('dept').value,
-                status: document.getElementById('formStatus').value,
-                desc: document.getElementById('desc').value,
-                createdAt: timestamp,
-                images: [...currentFiles]
-            };
-            tickets.push(newTicket);
-            alert('Ticket Submitted!');
-            this.reset();
-            document.getElementById('preview-container').innerHTML = '';
-        };
-
-        function renderTable() {
-            const tbody = document.getElementById('ticketTableBody');
-            tbody.innerHTML = '';
-            tickets.forEach((t, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="row-number">${index + 1}</td>
-                        <td>${t.company}</td>
-                        <td>${t.name}</td>
-                        <td>${t.dept}</td>
-                        <td style="color: ${t.status === 'Done' ? '#166e48' : '#d9534f'}">${t.status}</td>
-                        <td style="font-size: 12px; color: #999;">${t.createdAt}</td>
-                        <td>
-                            <button class="icon-btn view" onclick="viewFiles(${t.id})"><span class="material-icons-outlined">visibility</span></button>
-                            <button class="icon-btn delete" onclick="deleteTicket(${t.id})"><span class="material-icons-outlined">delete</span></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function viewFiles(id) {
-            const t = tickets.find(x => x.id === id);
-            const win = window.open("");
-            win.document.write("<h3>Attachments:</h3>");
-            t.images.forEach(img => win.document.write(`<img src="${img}" style="width:250px; margin:10px; border-radius:8px;">`));
-        }
-
-        function deleteTicket(id) {
-            if(confirm("Delete?")) { 
-                tickets = tickets.filter(x => x.id !== id); 
-                renderTable(); 
-                updateDashboard();
-            }
-        }
-
-        function exportToExcel() {
-            let csv = "ID,Company,Employee,Dept,Status,Created At\n";
-            tickets.forEach((t, index) => csv += `${index + 1},${t.company},${t.name},${t.dept},${t.status},${t.createdAt}\n`);
-            const link = document.createElement("a");
-            link.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-            link.download = "it_report.csv"; link.click();
-        }
-
-        function exportToPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("IT Support Report", 14, 15);
-            const tableRows = tickets.map((t, index) => [index + 1, t.company, t.name, t.dept, t.status, t.createdAt]);
-            doc.autoTable({
-                head: [['#', 'Company', 'Employee', 'Department', 'Status', 'Date']],
-                body: tableRows,
-                startY: 20,
-            });
-            doc.save("it_report.pdf");
-        }
-       // Airtable Configuration with your specific IDs
-const AIRTABLE_TOKEN = "patO9otXDZShZLUSu.2ac0bb3b923b4603ef15ed920fcc13d48e8881107cc919a8a19d80d102f476c6";
-const BASE_ID = "applQXkOT3HgW9YHm";
-const TABLE_ID = "tbla9czkS57NYfpZp"; 
-
+// 2. Submit Logic (to Airtable + Local Dashboard)
 document.getElementById('ticketForm').onsubmit = async function(e) {
     e.preventDefault();
     
-    // Get the file name if an attachment is selected
-    const fileInput = document.getElementById('fileInput');
-    const fileName = fileInput && fileInput.files[0] ? fileInput.files[0].name : "No Attachment";
+    const fileInput = document.getElementById('fileAttachment');
+    const fileName = fileInput.files[0] ? fileInput.files[0].name : "No file";
 
-    // Prepare data (Keys must match Airtable Column Names exactly)
-    const ticketData = {
-        "fields": {
-                        "Company": document.getElementById('companyName').value,
-
-            "Employee Name": document.getElementById('empName').value,
-            "Description": document.getElementById('desc').value,
-            "Status": "Done",
-            "Attachment": fileName
-        }
-    };
-
-    try {
-        // Sending data to Airtable API
-        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ticketData)
-        });
-
-        if (response.ok) {
-            alert('Success! The ticket has been saved to Airtable. 🎉');
-            this.reset(); // Clear the form
-        } else {
-            const errorInfo = await response.json();
-            console.error('Airtable Error:', errorInfo);
-            alert('Submission failed: Check if Airtable column names match exactly.');
-        }
-    } catch (error) {
-        console.error('Connection Error:', error);
-        alert('Error: Could not connect to the database.');
-    }
-};
-        const AIRTABLE_TOKEN = "patO9otXDZShZLUSu.2ac0bb3b923b4603ef15ed920fcc13d48e8881107cc919a8a19d80d102f476c6";
-const BASE_ID = "applQXkOT3HgW9YHm";
-const TABLE_ID = "tbla9czkS57NYfpZp"; // Table ID based on your provided info
-
-document.getElementById('ticketForm').onsubmit = async function(e) {
-    e.preventDefault();
-    
-    // Collecting data from the form IDs in your HTML
-    const ticketData = {
+    // Data for Airtable (Match your columns exactly!)
+    const airtableData = {
         "fields": {
             "Employee Name": document.getElementById('empName').value,
             "Company": document.getElementById('companyName').value,
-            "Department": document.getElementById('deptName').value,
+            "Department": document.getElementById('dept').value,
             "Description": document.getElementById('desc').value,
-            "Status": document.getElementById('statusSelect').value || "Done",
-            "Attachment": document.getElementById('fileInput').files[0] ? document.getElementById('fileInput').files[0].name : "No file"
+            "Status": document.getElementById('formStatus').value,
+            "Attachments": fileName 
         }
+    };
+
+    // Data for Local Dashboard
+    const now = new Date();
+    const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const localTicket = {
+        id: Date.now(),
+        company: airtableData.fields["Company"],
+        name: airtableData.fields["Employee Name"],
+        dept: airtableData.fields["Department"],
+        status: airtableData.fields["Status"],
+        createdAt: timestamp,
+        images: [...currentFiles]
     };
 
     try {
@@ -571,22 +399,112 @@ document.getElementById('ticketForm').onsubmit = async function(e) {
                 'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(ticketData)
+            body: JSON.stringify(airtableData)
         });
 
         if (response.ok) {
-            alert('Success! Data saved to Airtable. 🎉');
+            tickets.push(localTicket); // Save locally for dashboard
+            alert('Success! Data saved to Airtable and Dashboard. 🎉');
             this.reset();
+            document.getElementById('preview-container').innerHTML = '';
         } else {
-            const errorLog = await response.json();
-            console.error(errorLog);
-            alert('Submission failed: Verify that Airtable column names match the code exactly.');
+            const err = await response.json();
+            console.error(err);
+            alert('Submission failed: Check Airtable column names.');
         }
     } catch (error) {
-        console.error('Connection Error:', error);
         alert('Network error, please try again.');
     }
 };
+
+// 3. Dashboard & Export Functions
+function updateDashboard() {
+    const compData = {};
+    const deptData = {};
+    tickets.forEach(t => {
+        compData[t.company] = (compData[t.company] || 0) + 1;
+        deptData[t.dept] = (deptData[t.dept] || 0) + 1;
+    });
+
+    const ctxComp = document.getElementById('companyChart').getContext('2d');
+    if(companyChartInstance) companyChartInstance.destroy();
+    companyChartInstance = new Chart(ctxComp, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(compData),
+            datasets: [{ label: 'Tickets', data: Object.values(compData), backgroundColor: '#166e48' }]
+        },
+        options: { maintainAspectRatio: false }
+    });
+
+    const ctxDept = document.getElementById('deptChart').getContext('2d');
+    if(deptChartInstance) deptChartInstance.destroy();
+    deptChartInstance = new Chart(ctxDept, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(deptData),
+            datasets: [{ data: Object.values(deptData), backgroundColor: ['#166e48', '#2d8a5a', '#4fac7d'] }]
+        },
+        options: { maintainAspectRatio: false }
+    });
+}
+
+function renderTable() {
+    const tbody = document.getElementById('ticketTableBody');
+    tbody.innerHTML = tickets.map((t, index) => `
+        <tr>
+            <td class="row-number">${index + 1}</td>
+            <td>${t.company}</td>
+            <td>${t.name}</td>
+            <td>${t.dept}</td>
+            <td style="color: ${t.status === 'Done' ? '#166e48' : '#d9534f'}">${t.status}</td>
+            <td style="font-size: 12px; color: #999;">${t.createdAt}</td>
+            <td>
+                <button class="icon-btn view" onclick="viewFiles(${t.id})"><span class="material-icons-outlined">visibility</span></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function viewFiles(id) {
+    const t = tickets.find(x => x.id === id);
+    const win = window.open("");
+    win.document.write("<h3>Attachments:</h3>");
+    t.images.forEach(img => win.document.write(`<img src="${img}" style="width:250px; margin:10px;">`));
+}
+
+function exportToExcel() {
+    let csv = "ID,Company,Employee,Dept,Status,Date\n";
+    tickets.forEach((t, i) => csv += `${i+1},${t.company},${t.name},${t.dept},${t.status},${t.createdAt}\n`);
+    const link = document.createElement("a");
+    link.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+    link.download = "it_report.csv"; link.click();
+}
+
+function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("IT Support Report", 14, 15);
+    const rows = tickets.map((t, i) => [i+1, t.company, t.name, t.dept, t.status, t.createdAt]);
+    doc.autoTable({ head: [['#', 'Company', 'Employee', 'Dept', 'Status', 'Date']], body: rows, startY: 20 });
+    doc.save("it_report.pdf");
+}
+
+function previewFiles() {
+    const preview = document.getElementById('preview-container');
+    preview.innerHTML = '';
+    currentFiles = [];
+    Array.from(document.getElementById('fileAttachment').files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            currentFiles.push(e.target.result);
+            const img = document.createElement('img');
+            img.src = e.target.result; img.className = 'preview-img';
+            preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+}
     </script>
 </body>
 </html>
