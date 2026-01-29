@@ -350,6 +350,7 @@
         const BASE_ID = "applQXkOT3HgW9YHm";
         const TICKETS_TABLE = "tbla9czkS57NYfpZp";
         const ADMIN_TABLE = "admin";
+        const IMGBB_API_KEY = "206e0323237ddb0e6a23caea54d37af3";
 
         window.onload = () => { 
             const savedUser = sessionStorage.getItem('user');
@@ -424,7 +425,7 @@
             let imgHTML = "No Attachments Found.";
             if (t.attachment && Array.isArray(t.attachment) && t.attachment.length > 0) {
                 imgHTML = t.attachment.map(file => {
-                    if (file.type.startsWith('image/')) {
+                    if (file.type && file.type.startsWith('image/')) {
                         return `<img src="${file.url}" style="max-width:100%; border-radius:10px; margin-bottom:15px; display:block; border:1px solid #ddd;">`;
                     } else {
                         return `<a href="${file.url}" target="_blank">Download: ${file.filename}</a><br>`;
@@ -457,12 +458,38 @@
             showPage('form-page');
         }
 
+        // --- دالة الإرسال والرفع المحدثة ---
         document.getElementById('ticketForm').onsubmit = async function(e) {
             e.preventDefault();
             const id = document.getElementById('edit-ticket-id').value;
             const submitBtn = document.getElementById('submit-btn');
+            const fileInput = document.getElementById('fileAttachment');
+            
             submitBtn.disabled = true;
-            submitBtn.innerText = "Processing...";
+            submitBtn.innerText = "Uploading attachments...";
+
+            let imageUrl = "";
+
+            // 1. الرفع لـ ImgBB أولاً
+            if (fileInput.files.length > 0) {
+                try {
+                    const formData = new FormData();
+                    formData.append('image', fileInput.files[0]);
+                    
+                    const uploadRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const uploadData = await uploadRes.json();
+                    if(uploadData.success) {
+                        imageUrl = uploadData.data.url;
+                    }
+                } catch (err) {
+                    console.error("Upload failed", err);
+                }
+            }
+
+            // 2. إعداد الحقول لـ Airtable
             const fields = {
                 "Employee Name": document.getElementById('empName').value,
                 "Company": document.getElementById('companyName').value,
@@ -470,8 +497,15 @@
                 "Description": document.getElementById('desc').value,
                 "Status": document.getElementById('formStatus').value
             };
+
+            // إذا رفعنا صورة جديدة، نرسلها كرابط لـ Airtable
+            if (imageUrl) {
+                fields["Attachments"] = [{ url: imageUrl }];
+            }
+
             const method = id ? 'PATCH' : 'POST';
             const url = `https://api.airtable.com/v0/${BASE_ID}/${TICKETS_TABLE}${id ? '/' + id : ''}`;
+
             try {
                 const res = await fetch(url, {
                     method,
@@ -479,7 +513,7 @@
                     body: JSON.stringify({ fields })
                 });
                 if(res.ok) {
-                    alert(id ? "Updated Successfully!" : "Submitted Successfully!");
+                    alert(id ? "Record Updated! ✅" : "Ticket Submitted Successfully! 🚀");
                     location.reload();
                 } else {
                     const err = await res.json();
@@ -489,10 +523,10 @@
                 alert("Request Failed!");
             } finally {
                 submitBtn.disabled = false;
+                submitBtn.innerText = id ? "Update Ticket" : "Submit Request";
             }
         };
 
-        // --- دوال التصدير المضافة ---
         function exportToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -500,7 +534,6 @@
             doc.text("IT Support Tickets Report", 14, 20);
             doc.setFontSize(10);
             doc.text(`Company: HAKA Group | Date: ${new Date().toLocaleDateString()}`, 14, 28);
-            
             doc.autoTable({
                 startY: 35,
                 head: [['#', 'Company', 'Employee', 'Dept', 'Status', 'Date']],
